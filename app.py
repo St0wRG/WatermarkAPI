@@ -35,22 +35,23 @@ def create_watermark(watermark_text):
     text_width_1 = can.stringWidth(line1, font_main, size_main)
     text_width_2 = can.stringWidth(line2, font_secondary, size_secondary)
 
-    # Position horizontale : aligné à droite
-    x1 = width - max(text_width_1, text_width_2) - 40
-    y_base = height * 0.4  # légèrement au-dessus du bas
+    # Aligné à droite sur la largeur la plus grande
+    max_width = max(text_width_1, text_width_2)
+    x_align = width - max_width - 40
+    y_base = height * 0.4  # vers le milieu bas
 
-    # Texte "PAYÉ"
+    # Rotation + "PAYÉ"
     can.saveState()
+    can.translate(x_align, y_base)
+    can.rotate(rotation_angle)
     can.setFillColor(red_transparent)
     can.setFont(font_main, size_main)
-    can.translate(x1, y_base)
-    can.rotate(rotation_angle)
-    can.drawString(0, 0, line1)
+    can.drawString(max_width - text_width_1, 0, line1)  # aligné à droite
 
-    # Texte date, même rotation et alignement
+    # Date (plus petite, noire, même rotation, même base)
     can.setFillColor(black_transparent)
     can.setFont(font_secondary, size_secondary)
-    can.drawString(0, -30, line2)  # Décalé verticalement
+    can.drawString(max_width - text_width_2, -24, line2)  # aligné à droite, plus bas
     can.restoreState()
 
     can.save()
