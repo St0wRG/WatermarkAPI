@@ -2,7 +2,8 @@ from flask import Flask, request, send_file
 from PyPDF2 import PdfReader, PdfWriter
 from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import letter
-from reportlab.lib.colors import Color, red
+from reportlab.lib.colors import black
+from datetime import datetime
 import io, os
 
 app = Flask(__name__)
@@ -10,25 +11,38 @@ app = Flask(__name__)
 def create_watermark(watermark_text):
     packet = io.BytesIO()
     can = canvas.Canvas(packet, pagesize=letter)
-    can.setFont("Helvetica-Bold", 40)
 
-    # Rouge transparent (40 % d’opacité)
-    semi_transparent_red = Color(1, 0, 0, alpha=0.4)
-    can.setFillColor(semi_transparent_red)
+    # Couleur noire
+    can.setFillColor(black)
 
     width, height = letter
-    text_width = can.stringWidth(watermark_text, "Helvetica-Bold", 40)
 
-    # ✅ Position ajustée : bas droite mais plus haut
-    x = width - text_width - 40
-    y = 120  # << ici, on le remonte plus haut qu’avant (anciennement 40)
+    # Ligne 1 : texte principal ("PAYÉ")
+    line1 = watermark_text
+    # Ligne 2 : date formatée automatiquement
+    line2 = datetime.today().strftime("le %d/%m/%y")
 
-    # Rotation autour du coin inférieur droit
-    can.saveState()
-    can.translate(x, y)
-    can.rotate(30)  # inclinaison douce
-    can.drawString(0, 0, watermark_text)
-    can.restoreState()
+    # Polices et tailles
+    font_main = "Helvetica-Bold"
+    font_secondary = "Helvetica"
+    size_main = 36
+    size_secondary = 24
+
+    # Calcul des largeurs de texte
+    text_width_1 = can.stringWidth(line1, font_main, size_main)
+    text_width_2 = can.stringWidth(line2, font_secondary, size_secondary)
+
+    # Position bas droite mais visible (marge de 40 px + hauteur personnalisée)
+    y_base = 120
+    x1 = width - text_width_1 - 40
+    x2 = width - text_width_2 - 40
+
+    # Dessin des deux lignes
+    can.setFont(font_main, size_main)
+    can.drawString(x1, y_base, line1)
+
+    can.setFont(font_secondary, size_secondary)
+    can.drawString(x2, y_base - 28, line2)
 
     can.save()
     packet.seek(0)
@@ -40,7 +54,7 @@ def watermark_pdf():
         return {"error": "PDF file required"}, 400
 
     pdf_file = request.files['file']
-    watermark_text = request.form.get('text', 'PAYÉ')
+    watermark_text = request.form.get('text', 'PAYÉ')  # par défaut : PAYÉ
 
     pdf_reader = PdfReader(pdf_file)
     pdf_writer = PdfWriter()
