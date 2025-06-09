@@ -38,48 +38,12 @@ def create_watermark(watermark_text):
     # Aligné à droite sur la largeur la plus grande
     max_width = max(text_width_1, text_width_2)
     x_align = width - max_width - 40
-    y_base = height * 0.4  # vers le milieu bas
+    y_base = height * 0.4
 
-    # Rotation + "PAYÉ"
+    # "PAYÉ"
     can.saveState()
-    can.translate(x_align, y_base)
-    can.rotate(rotation_angle)
     can.setFillColor(red_transparent)
     can.setFont(font_main, size_main)
-    can.drawString(max_width - text_width_1, 0, line1)  # aligné à droite
-
-    # Date (plus petite, noire, même rotation, même base)
-    can.setFillColor(black_transparent)
-    can.setFont(font_secondary, size_secondary)
-    can.drawString(max_width - text_width_2, -24, line2)  # aligné à droite, plus bas
-    can.restoreState()
-
-    can.save()
-    packet.seek(0)
-    return PdfReader(packet)
-
-@app.route('/filigrane', methods=['POST'])
-def watermark_pdf():
-    if 'file' not in request.files:
-        return {"error": "PDF file required"}, 400
-
-    pdf_file = request.files['file']
-    watermark_text = request.form.get('text', 'PAYÉ')
-
-    pdf_reader = PdfReader(pdf_file)
-    pdf_writer = PdfWriter()
-    watermark = create_watermark(watermark_text).pages[0]
-
-    for page in pdf_reader.pages:
-        page.merge_page(watermark)
-        pdf_writer.add_page(page)
-
-    output_pdf = io.BytesIO()
-    pdf_writer.write(output_pdf)
-    output_pdf.seek(0)
-
-    return send_file(output_pdf, download_name="watermarked.pdf", as_attachment=True)
-
-if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 10000))
-    app.run(host='0.0.0.0', port=port)
+    can.translate(x_align, y_base)
+    can.rotate(rotation_angle)
+    can.drawString(max_width - tex_
