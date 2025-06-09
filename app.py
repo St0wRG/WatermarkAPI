@@ -20,7 +20,7 @@ def create_watermark(watermark_text):
 
     # Tailles de police
     size_main = 36
-    size_secondary = 18
+    size_secondary = 10
     rotation_angle = 15
 
     # Polices
