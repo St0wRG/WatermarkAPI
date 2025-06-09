@@ -12,21 +12,21 @@ def create_watermark(watermark_text):
     can = canvas.Canvas(packet, pagesize=letter)
     can.setFont("Helvetica-Bold", 40)
 
-    # Couleur rouge avec opacité 40%
+    # Rouge transparent (40 % d’opacité)
     semi_transparent_red = Color(1, 0, 0, alpha=0.4)
     can.setFillColor(semi_transparent_red)
 
     width, height = letter
     text_width = can.stringWidth(watermark_text, "Helvetica-Bold", 40)
 
-    # Position bas droite
+    # ✅ Position ajustée : bas droite mais plus haut
     x = width - text_width - 40
-    y = 40
+    y = 120  # << ici, on le remonte plus haut qu’avant (anciennement 40)
 
-    # Appliquer rotation autour du point (x, y)
+    # Rotation autour du coin inférieur droit
     can.saveState()
     can.translate(x, y)
-    can.rotate(30)  # Rotation de 30°
+    can.rotate(30)  # inclinaison douce
     can.drawString(0, 0, watermark_text)
     can.restoreState()
 
@@ -40,7 +40,7 @@ def watermark_pdf():
         return {"error": "PDF file required"}, 400
 
     pdf_file = request.files['file']
-    watermark_text = request.form.get('text', 'PAYÉ')  # par défaut PAYÉ
+    watermark_text = request.form.get('text', 'PAYÉ')
 
     pdf_reader = PdfReader(pdf_file)
     pdf_writer = PdfWriter()
