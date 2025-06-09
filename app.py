@@ -2,7 +2,7 @@ from flask import Flask, request, send_file
 from PyPDF2 import PdfReader, PdfWriter
 from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import letter
-from reportlab.lib.colors import red, black
+from reportlab.lib.colors import Color, black
 from datetime import datetime
 import io, os
 
@@ -14,33 +14,45 @@ def create_watermark(watermark_text):
 
     width, height = letter
 
-    # Ligne 1 : texte principal ("PAYÉ")
+    # Texte principal ("PAYÉ")
     line1 = watermark_text
-    # Ligne 2 : date du jour automatiquement générée
+    # Ligne 2 : date automatique
     line2 = datetime.today().strftime("le %d/%m/%y")
 
-    # Tailles des polices
+    # Styles
     size_main = 36
     size_secondary = 18
+    font_main = "Helvetica-Bold"
+    font_secondary = "Helvetica"
 
-    # Largeur des deux lignes pour alignement à droite
-    text_width_1 = can.stringWidth(line1, "Helvetica-Bold", size_main)
-    text_width_2 = can.stringWidth(line2, "Helvetica", size_secondary)
+    # Couleur rouge semi-transparente (alpha ≈ 50 %)
+    semi_transparent_red = Color(1, 0, 0, alpha=0.5)
+    can.setFillColor(semi_transparent_red)
+    can.setFont(font_main, size_main)
 
-    # Coordonnées de placement bas droite (remonté pour visibilité)
-    y_base = 120
+    # Mesure largeur du texte pour alignement à droite
+    text_width_1 = can.stringWidth(line1, font_main, size_main)
     x1 = width - text_width_1 - 40
-    x2 = width - text_width_2 - 40
 
-    # Dessin "PAYÉ" en rouge
-    can.setFillColor(red)
-    can.setFont("Helvetica-Bold", size_main)
-    can.drawString(x1, y_base, line1)
+    # Position verticale : ~⅖ de la page
+    y_base = height * 0.4  # ~320 sur 792 (page letter)
 
-    # Dessin date en noir, plus petit
+    # Appliquer rotation pour "PAYÉ"
+    can.saveState()
+    can.translate(x1, y_base)
+    can.rotate(15)  # Rotation légère
+    can.drawString(0, 0, line1)
+    can.restoreState()
+
+    # Date en dessous, en noir, non inclinée
+    can.setFont(font_secondary, size_secondary)
     can.setFillColor(black)
-    can.setFont("Helvetica", size_secondary)
-    can.drawString(x2, y_base - 24, line2)
+
+    text_width_2 = can.stringWidth(line2, font_secondary, size_secondary)
+    x2 = width - text_width_2 - 40
+    y2 = y_base - 30  # Position de la date, plus bas que "PAYÉ"
+
+    can.drawString(x2, y2, line2)
 
     can.save()
     packet.seek(0)
@@ -52,7 +64,7 @@ def watermark_pdf():
         return {"error": "PDF file required"}, 400
 
     pdf_file = request.files['file']
-    watermark_text = request.form.get('text', 'PAYÉ')  # Défaut = PAYÉ
+    watermark_text = request.form.get('text', 'PAYÉ')  # Par défaut : PAYÉ
 
     pdf_reader = PdfReader(pdf_file)
     pdf_writer = PdfWriter()
